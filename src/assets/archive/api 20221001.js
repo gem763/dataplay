@@ -27,13 +27,6 @@ import { parsed, parse } from '@/assets/mathparser.js'
 // df.addColumn('test', [1,2,3], { inplace: true });
 // console.log(df);
 
-
-// 10월 5일
-// 카테고리 spot 사례
-// 메소드 post 사례
-// 화면상에서 입력하는 거 구현해보기
-
-
 const { VITE_SEOUL_DATA_APIKEY } = import.meta.env
 
 const apis = [
@@ -158,9 +151,10 @@ const apis = [
             },
         ],
         cols: [
+            { name: 'JONGNO', path: 'JONGNO', title: '종로구' },
             { name: 'quantlab_2_0', formula: '$api("0").col("S_HJ")-1', title: '서울 확진자수', desc: '서울 확진자수 설명' },
             { name: 'quantlab_2_1', formula: '$api("1").col("JONGNO")', title: '종로구 확진자수', desc: '종로구 확진자수 설명' },
-            { name: 'quantlab_2_2', formula: '$col("1.JONGNO")-1', title: '종로구 확진자수', desc: '종로구 확진자수 설명' },
+            // { name: 'quantlab_2_1', formula: '$api("1").col("JONGNO")', title: '종로구 확진자수', desc: '종로구 확진자수 설명' },
         ]
     }
 ]
@@ -176,7 +170,6 @@ class Danfobj {
 
         if (data.constructor.name.includes(obj_type)) {
             return data
-
         } else {
             return new dfd[obj_type](data)
         }
@@ -242,6 +235,50 @@ class Table extends Danfobj {
     constructor(data) {
         super(data);
     }
+
+    // _custom_col(name, formula_parsed) {
+    //     try {
+    //         const _col = eval(formula_parsed).obj;
+    //         _col.$columns = [ name ];
+    //         return _col
+
+    //     } catch(e) {
+    //         throw new Error(`something wrong while getting column [${name}]: ${formula}`);
+    //     }
+    // }
+
+    // view_custom_cols(cols) {
+    //     const view_obj = cols.map(col => {
+    //         const _formula = parsed(col.formula).replaceAll('$', 'this.');
+    //         this.view.cols.push({
+    //             name: col.name,
+    //             formula: col.formula,
+    //             formula_parsed: _formula
+    //         });
+
+    //         return this._custom_col(col.name, _formula)
+    //     });
+
+    //     this.view.obj = dfd.concat({ dfList: view_obj, axis: 1 });
+    // }
+
+    // add_custom_cols(cols) {
+    //     cols.forEach(col => {
+    //         const _formula = parsed(col.formula).replaceAll('$', 'this.');
+    //         this.cols_added.push({
+    //             name: col.name,
+    //             formula: col.formula,
+    //             formula_parsed: _formula
+    //         });
+
+    //         this.obj.addColumn(col.name, this._custom_col(col.name, _formula), { inplace: true });
+    //     })
+    // }
+
+    // add_col(col) {
+    //     const _formula = parsed(col.formula).replaceAll('$', 'this.');
+    //     this.obj.addColumn(col.name, this._custom_col(col.name, _formula), { inplace: true });
+    // }
 
     add_col(col) {
         this.obj.addColumn(col.obj.$columns[0], col.obj, { inplace: true });
@@ -397,13 +434,7 @@ class Loader {
     }
 
     _custom_col(formula_parsed, name) {
-        try {
-            return eval(formula_parsed).renamed(name)
-
-        } catch(e) {
-            // console.log(e);
-            throw new Error(`something wrong while evaluating column [${name}]: ${formula_parsed}`);
-        }
+        return eval(formula_parsed).renamed(name)
     }
 
     child_api(apid) {
@@ -411,15 +442,7 @@ class Loader {
     }
 
     col(name) {
-        const name_tokens = name.split('.');
-
-        switch(name_tokens.length) {
-            case 1:
-                return this.table.col(name)
-
-            case 2: 
-                return this.child_api(name_tokens[0]).col(name_tokens[1])
-        }
+        return this.table.col(name)
     }
 }
 
@@ -563,6 +586,8 @@ class TimeseriesBaseloader extends Baseloader {
 
         this.table = new Table(d);
         this.table.set_index({ column: "timestamp", drop: true, inplace: true });
+        // this.table = new Table(d, this.cols_custom);
+        // this.table.obj.print()
     }
 }
 

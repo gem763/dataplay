@@ -46,6 +46,7 @@ const api = apis.find(o => o.id == apid.value);
 loader.value = Loader.build(api, {
     start: start_date.value,
     end: end_date.value,
+    // file: file.value,
     filetype: file.value,
 });
 
